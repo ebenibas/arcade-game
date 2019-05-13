@@ -1,9 +1,49 @@
 const gulp = require('gulp');
-const sass = require('gulp-sass');
 const cleanCSS = require('gulp-clean-css');
 const imageMin = require('gulp-imagemin');
 const uglify = require('gulp-uglify');
 const concat = require('gulp-concat');
 const babel = require('gulp-babel');
-const browserSync = require('browser-sync').create();
 const autoprefixer = require('gulp-autoprefixer');
+
+gulp.task('autoprefix', () =>
+    gulp.src('./src/css/.js')
+        .pipe(autoprefixer({
+            browsers: ['last 2 versions'],
+            cascade: false
+        }))
+        .pipe(cleanCSS())
+        .pipe(gulp.dest('dist'))
+);
+gulp.task('images', () => {
+    return gulp.src('./src/images')
+      .pipe(imageMin())
+      .pipe(gulp.dest('./dest/images'))
+      
+  });
+  gulp.task('javascript', () => {
+    return gulp.src('./src/js/**/*.js')
+      .pipe(babel({
+        presets: ['@babel/env']
+      }))
+      .pipe(concat('main.js'))
+      .pipe(uglify())
+      .pipe(gulp.dest('./dest/js'))
+  });
+  gulp.task('copy-index', () => {
+    return gulp.src('./src/index.html')
+      .pipe(gulp.dest('./dest'))
+  });
+
+  gulp.task('all', gulp.series(
+    'copy-index',
+    'javascript',
+    'images',
+    'autoprefix',
+    () => {
+      gulp.watch('./src/js/**/*.js', gulp.series('javascript'))
+      gulp.watch('./src/css/**/*.css', gulp.series('autoprefix'))
+      gulp.watch('./src/index.html', gulp.series('copy-index'))
+  
+    }
+  ));
